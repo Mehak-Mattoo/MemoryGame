@@ -1,10 +1,11 @@
 import Game from "./components/Game";
+import './index.css';
 
 function App() {
   return (
     <>
-      <div className=" bg-blue-900 h-screen items-center justify-center">
-        {" "}
+      <div >
+ 
         <Game />
       </div>
     </>

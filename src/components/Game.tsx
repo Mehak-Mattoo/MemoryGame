@@ -1,48 +1,123 @@
-import React from 'react'
-
-
-const items= [1,2,3,4,5];
-
-function shuffle(array:any) {
-  let currentIndex = array.length;
-
-  // While there remain elements to shuffle...
-  while (currentIndex != 0) {
-
-    // Pick a remaining element...
-    let randomIndex = Math.floor(Math.random() * currentIndex);
-    currentIndex--;
-
-    // And swap it with the current element.
-    [array[currentIndex], array[randomIndex]] = [
-      array[randomIndex], array[currentIndex]];
-      return array;
-  }
-}
-const allItems=shuffle([...items, ...items]);
-
-const handleCardClick=()=>{
-
-}
-
+import React, { useRef, useState } from "react";
+import "./Game.css";
 const Game = () => {
+  const defaultState: { index: number | null; key: number | null } = {
+    index: null,
+    key: null,
+  };
+
+  const items = [1, 2, 3, 4, 5];
+
+  const [firstCard, setFirstCard] = useState(defaultState);
+  const [secondCard, setSecondCard] = useState(defaultState);
+  const [remainingCards, setremainingCards] = useState(items);
+  const [moves, setMoves] = useState(0);
+
+  const shuffle = (array: any[]) => {
+    let currentIndex = array.length;
+
+    while (currentIndex !== 0) {
+      const randomIndex = Math.floor(Math.random() * currentIndex);
+      currentIndex--;
+
+      [array[currentIndex], array[randomIndex]] = [
+        array[randomIndex],
+        array[currentIndex],
+      ];
+    }
+    return array;
+  };
+
+  const [allItems] = useState(() => shuffle([...items, ...items]));
+  const timer = useRef<NodeJS.Timeout | null>(null);
+
+  const handleCardClick = (index: number, value: number) => {
+    if (timer.current !== null) {
+      clearTimeout(timer.current);
+    }
+
+    // Reset cards if two are already selected
+    if (firstCard.index !== null && secondCard.index !== null) {
+      setFirstCard(defaultState);
+      setSecondCard(defaultState);
+    }
+
+    // Handle first card selection
+    if (firstCard.index === null) {
+      setFirstCard({ index, key: value });
+      setMoves((prevMoves) => prevMoves + 1);
+    }
+    // Handle second card selection
+    else if (secondCard.index === null && firstCard.index !== index) {
+      setSecondCard({ index, key: value });
+      setMoves((prevMoves) => prevMoves + 1);
+
+      if (firstCard.key === value) {
+        // Cards match
+        setremainingCards((prevCards) =>
+          prevCards.filter((card) => card !== value)
+        );
+      } else {
+        // Cards don't match, reset after delay
+        timer.current = setTimeout(() => {
+          setFirstCard(defaultState);
+          setSecondCard(defaultState);
+        }, 2000);
+      }
+    }
+  };
+
   return (
     <>
-    <div>
-
-      {allItems.map((item:number, index:number) => (
-        <div className='grid grid-cols-5' key={index} onClick={() => handleCardClick()}>
-
-          <div className='h-48 gap-4 place-items-center m-4 grid relative justify-center bg-teal-300'>   {item}</div>
-       
+      <div className="game">
+        <div className="status">
+          {remainingCards.length > 0 ? (
+            <>
+              <p>Remaining Cards:</p>
+              <div className="remaining-cards">
+                {remainingCards.map((card, index) => (
+                  <span key={index} className="text-lg font-bold mx-1">
+                    {card}
+                  </span>
+                ))}
+              </div>
+            </>
+          ) : (
+            <p className="text-green-500 text-2xl font-bold">Victory!</p>
+          )}
         </div>
-      ))}
-    </div>
 
-  
-      
+        <div className="cardsContainer grid grid-cols-5 gap-4">
+          {allItems.map((item, index) => (
+            <div key={index} className="relative">
+              <div
+                className={`card ${
+                  firstCard.index === index ||
+                  secondCard.index === index ||
+                  !remainingCards.includes(item)
+                    ? "flipped"
+                    : ""
+                }`}
+                onClick={() => handleCardClick(index, item)}
+              >
+                {/* Front Side */}
+                <div className="frontSide"></div>
+                {/* Back Side */}
+                <div className="backSide absolute inset-0 flex justify-center items-center">
+                  <img
+                    src={`https://robohash.org/${item}`}
+                    alt={`Card ${item}`}
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <p>Moves Used: {moves}</p>
+      </div>
     </>
-  )
-}
+  );
+};
 
-export default Game
+export default Game;
