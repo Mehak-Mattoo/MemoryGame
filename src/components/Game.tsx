@@ -6,13 +6,28 @@ const Game = () => {
     key: null,
   };
 
-  const items = [1, 2, 3, 4, 5];
-
   const [firstCard, setFirstCard] = useState(defaultState);
   const [secondCard, setSecondCard] = useState(defaultState);
-  const [remainingCards, setremainingCards] = useState(items);
-  const [moves, setMoves] = useState(0);
 
+  const [moves, setMoves] = useState(0);
+  const [items, setItems] = useState<number[]>([]); // Holds the card values
+  const [allItems, setAllItems] = useState<number[]>([]); // Holds shuffled cards
+  const [inputValue, setInputValue] = useState(""); // User input
+
+  const [remainingCards, setremainingCards] = useState(items);
+
+  const initializeGame = () => {
+    const newItems = Array.from(
+      { length: parseInt(inputValue) || 0 },
+      (_, i) => i + 1
+    );
+    const shuffledItems = shuffle([...newItems, ...newItems]);
+    setItems(newItems);
+    setAllItems(shuffledItems);
+    setremainingCards(newItems);
+    setFirstCard(defaultState);
+    setSecondCard(defaultState);
+  };
   const shuffle = (array: any[]) => {
     let currentIndex = array.length;
 
@@ -28,7 +43,7 @@ const Game = () => {
     return array;
   };
 
-  const [allItems] = useState(() => shuffle([...items, ...items]));
+  // const [allItems] = useState(() => shuffle([...items, ...items]));
   const timer = useRef<NodeJS.Timeout | null>(null);
 
   const handleCardClick = (index: number, value: number) => {
@@ -69,52 +84,62 @@ const Game = () => {
 
   return (
     <>
-      <div className="game">
-        <div className="status">
-          {remainingCards.length > 0 ? (
-            <>
-              <p>Remaining Cards:</p>
-              <div className="remaining-cards">
-                {remainingCards.map((card, index) => (
-                  <span key={index} className="text-lg font-bold mx-1">
-                    {card}
-                  </span>
-                ))}
-              </div>
-            </>
-          ) : (
-            <p className="text-green-500 text-2xl font-bold">Victory!</p>
-          )}
+      <div className="game m-4">
+        {/* Input Section */}
+        <div className="justify-center items-center mx-auto">
+          <input
+            type="number"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            placeholder="Enter number of cards"
+            className="border p-2 rounded-lg mr-2"
+          />
+          <button
+            onClick={ 
+              initializeGame
+            }
+            className="bg-blue-500 text-white px-4 py-2 rounded-lg"
+          >
+            Start Game
+          </button>
         </div>
-
-        <div className="cardsContainer grid grid-cols-5 gap-4">
-          {allItems.map((item, index) => (
-            <div key={index} className="relative">
-              <div
-                className={`card ${
-                  firstCard.index === index ||
-                  secondCard.index === index ||
-                  !remainingCards.includes(item)
-                    ? "flipped"
-                    : ""
-                }`}
-                onClick={() => handleCardClick(index, item)}
-              >
-                {/* Front Side */}
-                <div className="frontSide"></div>
-                {/* Back Side */}
-                <div className="backSide absolute inset-0 flex justify-center items-center">
-                  <img
-                    src={`https://robohash.org/${item}`}
-                    alt={`Card ${item}`}
-                  />
+        <div className="game">
+          <div
+          className={`cardsContainer grid mx-auto ${
+            parseInt(inputValue) > 1
+              ? `grid-cols-${Math.ceil(parseInt(inputValue) / 2)}`
+              : "grid-cols-1"
+          } gap-4`}
+            onClick={() => console.log(inputValue)}
+          >
+            {allItems.map((item, index) => (
+              <div key={index} className="relative mx-0">
+                <div
+                  className={`card h-[20rem] ${
+                    firstCard.index === index ||
+                    secondCard.index === index ||
+                    !remainingCards.includes(item)
+                      ? "flipped"
+                      : ""
+                  }`}
+                  onClick={() => handleCardClick(index, item)}
+                >
+                  {/* Front Side */}
+                  <div className="frontSide">
+                    <img
+                      src={`https://robohash.org/${item}?set=set4`}
+                      alt={`Card ${item}`}
+                    />
+                  </div>
+                  {/* Back Side */}
+                  <div className="backSide absolute inset-0 flex justify-center items-center"></div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
 
-        <p>Moves Used: {moves}</p>
+          <p>Moves Used: {moves}</p>
+        </div>
       </div>
     </>
   );
